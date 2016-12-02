@@ -1,6 +1,6 @@
 ''' evolbug 2016
 
-LWCF - Light-weight Component Framework 1.0
+LWCF - Light-weight Component Framework 1.1
 
 Can be used for Component Oriented Programming
 '''
@@ -8,21 +8,16 @@ Can be used for Component Oriented Programming
 
 class Component:
     ''' Base component class
-    
+
+    All components must inherit the Component base class to use the
+    component framework.
+
+    __setup__ is used in place of __init__
+
     Usage:
         class NewComponent(Component):
             def __setup__(self, *args, **kwargs):
                 pass
-
-    Example:
-        class Mouse(Component):
-            def __setup__(self):
-                pass
-    
-    All components must inherit the Component base class to use the 
-    component framework.
-
-    __setup__ is used in place of __init__
     '''
 
     def __init__(self, *ag, **kw):
@@ -47,33 +42,27 @@ class Component:
 
         self.components.append(component)
 
-    def event(self, **kw):
+    def __call__(self, **kw): self.event(**kw) #implicit event
+    def event(self, **kw): #explicit event
         ''' send all events down to children '''
+
         for k in kw:
             if type(kw[k]) not in (tuple, list):
                 kw[k] = [kw[k]]
 
-        for c in self.components:
-            c.event(**kw)
+        for c in self.components: c.event(**kw)
+
 
 
 class Receiver(Component):
     ''' Basic event receiver component
+    The Receiver will grab an event dispatched by the parent Component
+    and call the function with event data.
 
     Usage:
         Component << Receiver('event_name', function_callback)
-
-    Example:
-        class Mouse(Component):
-            def __init__(self):
-                self.attach(Receiver('mouse_press', self.on_mouse_press))
-
-            def on_mouse_press(self, *args):
-                print('press', *args)
-
-    The Receiver will grab an event dispatched by Emitter and call the 
-    function with event data.
     '''
+
 
     def __setup__(self, event, callback):
         ''' setup, storing event name and function '''
@@ -83,7 +72,7 @@ class Receiver(Component):
 
     def event(self, **kw):
         ''' find the stored event name in the messages'''
-        
+
         if self.ev in kw:
             # event is found, call stored function with message data
             self.fn(*kw[self.ev])
@@ -93,7 +82,7 @@ class Receiver(Component):
 
 if __name__ == '__main__':
     ''' Minimal test example '''
-    
+
     class Movement(Component):
         def __setup__(self):
             self.pos = [0,0]
@@ -104,12 +93,9 @@ if __name__ == '__main__':
             self.pos[1] += y
             print('Movement: moved by', x, ';', y, 'to', self.pos)
 
-    class Player(Component):
-        def move(self, x, y):
-            print('Player: I AM MOVING!')
-            self.event(move=(x, y))
+    class Player(Component): pass
 
     player = Player()
     player << Movement()
 
-    player.move(-1,-1)
+    player(move=(-1,-1))
