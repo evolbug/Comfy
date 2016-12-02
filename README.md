@@ -15,7 +15,7 @@ class NewComponent(Component):
 ```Python
 component.attach(other, ...)
 component << other
-self.other = other
+self.child = other
 ```
 
 ##### Sending messages(events):
@@ -23,8 +23,8 @@ self.other = other
 component(event_name=data, ...)
 component.event(event_name=data, ...)
 
-component.other(event_name=data, ...)
-component.other.event(event_name=data, ...)
+component.child(event_name=data, ...)
+component.child.event(event_name=data, ...)
 ```
 -
 ### Basic event receiver component
