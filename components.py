@@ -37,13 +37,16 @@ class Component:
             self._components.append(c)
             c._parents.append(self) # bind both ways
 
-    def __lshift__(self, component):
+        return components
+
+    def __lshift__(self, components):
         ''' self << Component()
 
         Overloaded operator to attach a single component to self
         '''
 
-        self.attach(*component if type(component) == tuple else [component])
+        return self.attach(
+            *components if type(components) == tuple else [components])
 
     def __call__(self, **kw): self.event(**kw) #implicit event
     def event(self, **kw): #explicit event

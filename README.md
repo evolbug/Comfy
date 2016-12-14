@@ -13,9 +13,15 @@ class NewComponent(Component):
 
 ##### Attaching components to eachother:
 ```Python
-component.attach(other, ...)
-component << other
-self.child = other
+# binding attachment
+other = component.attach(other)
+other = component << other
+
+# bind multiple components at once
+other1, other2 = component << (other1, other2)
+other1, other2 = component.attach(other1, other2)
+
+self.child = component # non-binding attachment
 ```
 
 ##### Sending messages(events):
