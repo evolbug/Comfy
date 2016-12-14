@@ -18,28 +18,26 @@ other = component.attach(other)
 other = component << other
 
 # bind multiple components at once
-other1, other2 = component << (other1, other2)
 other1, other2 = component.attach(other1, other2)
+other1, other2 = component << (other1, other2)
 
+# in a class
 self.child = component # non-binding attachment
 ```
 
 ##### Sending messages(events):
 ```Python
-component(event_name=data, ...)
-component.event(event_name=data, ...)
-
-component.child(event_name=data, ...)
-component.child.event(event_name=data, ...)
+component(event_name=data, ...) #implicit
+component.event(event_name=data, ...) #explicit
 ```
 -
 ### Basic event receiver component
 The `Receiver` will grab an event dispatched by the parent Component and call the function with event data.
 
 ```Python
-component.attach(Receiver('event_name', function_callback)
+component.attach(Receiver('event_name', function_callback))
 component << Receiver('event_name', function_callback)
-self.receiver = Receiver('event_name', function_callback)
+self.receiver = Receiver('event_name', function_callback) #needs explicit event pass
 ```
 
 `Receiver`s can also grab all events that are passed to it, with a wildcard event `'*'`
