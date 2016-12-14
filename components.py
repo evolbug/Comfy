@@ -21,7 +21,7 @@ class Component:
     '''
 
     def __init__(self, *ag, **kw):
-        ''' create component - DO NOT OVERRIDE THIS '''
+        ''' create component, super() this if used '''
 
         self._components = [] # child components
         self._parents = [] # own parents
