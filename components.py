@@ -46,7 +46,7 @@ class Component:
         '''
 
         return self.attach(
-            *components if type(components) == tuple else [components])
+            *components if type(components) in (tuple, list) else [components])
 
     def __call__(self, **kw): self.event(**kw) #implicit event
     def event(self, **kw): #explicit event
@@ -122,6 +122,8 @@ class LoggedComponent(Component):
         self << Receiver('*', self._log)
 
     def _log(self, *ag):
+        ''' log passing events, override for custom output '''
+
         print('LOG:', self.__class__.__name__, 'received:',
             ', '.join(str(i) for i in ag))
 
