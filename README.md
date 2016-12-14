@@ -2,7 +2,7 @@
 # Light-weight Component Framework for Python 3
 
 ### Base component class
-All components must inherit the Component base class to use the component framework.
+All components must inherit the `Component` base class to use the component framework.
 `__setup__` is used in place of `__init__` for code cleanliness, although `__init__` is allowed if superclass gets initialised.
 
 ```Python
@@ -28,13 +28,46 @@ component.child.event(event_name=data, ...)
 ```
 -
 ### Basic event receiver component
-The Receiver will grab an event dispatched by the parent Component and call the function with event data.
+The `Receiver` will grab an event dispatched by the parent Component and call the function with event data.
 
 ```Python
 component.attach(Receiver('event_name', function_callback)
 component << Receiver('event_name', function_callback)
 self.receiver = Receiver('event_name', function_callback)
 ```
+
+`Receiver`s can also grab all events that are passed to it, with a wildcard event `'*'`
+
+```Python
+Receiver('*', function_callback)
+```
+-
+### Logged components
+
+`Component` and `Receiver` have logging variants, respectively `LoggedComponent` and `LoggedReceiver`
+
+`LoggedComponent` will log all events passing through it, with no exceptions, this can be used to witness event propagation order through components.
+
+```Python
+>>> class C(LoggedComponent): pass
+>>> C()(some_event='data')
+
+LOG: C received: data
+```
+
+`LoggedReceiver` will log captured events in respect to it's parent.
+
+```Python
+>>> class C(LoggedComponent): pass
+>>> comp = C()
+>>> comp << LoggedReceiver('event', lambda e: print('>', e))
+>>> comp(event='data')
+
+LOG: C received: data
+LOG: C caught event: event > data
+> data
+```
+
 -
 ### Simple test example
 ```Python

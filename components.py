@@ -1,8 +1,8 @@
 ''' evolbug 2016
 
-LWCF - Light-weight Component Framework 1.1
+Comfy - Light-weight Component Framework
 
-Can be used for Component Oriented Programming
+Can be used for component oriented programming
 '''
 
 
@@ -23,7 +23,8 @@ class Component:
     def __init__(self, *ag, **kw):
         ''' create component - DO NOT OVERRIDE THIS '''
 
-        self.components = []
+        self._components = [] # child components
+        self._parents = [] # own parents
         self.__setup__(*ag, **kw)
 
     def __setup__(self, *ag, **kw):
@@ -32,7 +33,9 @@ class Component:
     def attach(self, *components):
         ''' attach components to self '''
 
-        for c in components: self.components.append(c)
+        for c in components:
+            self._components.append(c)
+            c._parents.append(self) # bind both ways
 
     def __lshift__(self, component):
         ''' self << Component()
@@ -40,7 +43,7 @@ class Component:
         Overloaded operator to attach a single component to self
         '''
 
-        self.components.append(component)
+        self.attach(*component if type(component) == tuple else [component])
 
     def __call__(self, **kw): self.event(**kw) #implicit event
     def event(self, **kw): #explicit event
@@ -50,12 +53,13 @@ class Component:
             if type(kw[k]) not in (tuple, list):
                 kw[k] = [kw[k]]
 
-        for c in self.components: c.event(**kw)
+        for c in self._components: c.event(**kw)
 
 
 
 class Receiver(Component):
     ''' Basic event receiver component
+
     The Receiver will grab an event dispatched by the parent Component
     and call the function with event data.
 
@@ -64,19 +68,59 @@ class Receiver(Component):
     '''
 
 
-    def __setup__(self, event, callback):
-        ''' setup, storing event name and function '''
+    def __init__(self, event, callback, *ag, **kw):
+        ''' store event name and function '''
 
-        self.ev = event
-        self.fn = callback
+        self._ev = event
+        self._fn = callback
+        super().__init__(*ag, **kw)
 
     def event(self, **kw):
         ''' find the stored event name in the messages'''
 
-        if self.ev in kw:
-            # event is found, call stored function with message data
-            self.fn(*kw[self.ev])
+        if self._ev == '*': # capture all events
+            for event in kw: # for each event
+                self._fn(*kw[event]) # call the function
 
+        if self._ev in kw: # capture specific event
+            self._fn(*kw[self._ev]) # send event data to function
+
+
+
+class LoggedReceiver(Receiver):
+    ''' Receiver that logs event captures '''
+
+    def event(self, **kw):
+        ''' find the stored event name in the messages'''
+
+        if self._ev == '*': # capture all events
+            for event in kw: # for each event
+                self._fn(*kw[event]) # call the function
+
+        if self._ev in kw: # capture specific event
+            self._log(', '.join(str(i) for i in kw[self._ev])) # log capture
+            self._fn(*kw[self._ev]) # send event data to function
+
+    def _log(self, argstr):
+        ''' log the captured event, override for custom output '''
+
+        print(
+            'LOG:', ', '.join(str(c.__class__.__name__) for c in self._parents),
+            'caught event:', self._ev, '>', argstr
+        )
+
+
+
+class LoggedComponent(Component):
+    ''' Component that logs all messages that pass through '''
+
+    def __init__(self, *ag, **kw):
+        super().__init__(*ag, **kw)
+        self << Receiver('*', self._log)
+
+    def _log(self, *ag):
+        print('LOG:', self.__class__.__name__, 'received:',
+            ', '.join(str(i) for i in ag))
 
 
 
@@ -86,14 +130,14 @@ if __name__ == '__main__':
     class Movement(Component):
         def __setup__(self):
             self.pos = [0,0]
-            self << Receiver('move', self.move)
+            self << LoggedReceiver('move', self.move)
 
         def move(self, x, y=0):
             self.pos[0] += x
             self.pos[1] += y
             print('Movement: moved by', x, ';', y, 'to', self.pos)
 
-    class Player(Component): pass
+    class Player(LoggedComponent): pass
 
     player = Player()
     player << Movement()
