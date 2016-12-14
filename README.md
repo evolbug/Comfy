@@ -1,4 +1,4 @@
-# py-LWCF
+# Comfy
 # Light-weight Component Framework for Python 3
 
 ### Base component class
